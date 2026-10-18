@@ -1,0 +1,222 @@
+#!/usr/bin/env node
+// 静态化构建：把 Deno 服务端做的事（模板替换 + JSON 接口）在构建期一次性做完，
+// 产出一个纯静态 dist/，好让 Cloudflare Pages / Netlify / 任何静态托管直接上。
+//
+// 为什么需要它：public/*.html 里有 30 多处 {{VER}} {{SIZE}} {{SHA}} {{RELEASES}}，
+// 由 main.ts 在请求时填。直接丢静态托管，页面上就会露出 {{VER}} 这种花括号。
+//
+// 零依赖，只用 node 内置模块。
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const SRC = path.join(ROOT, 'public');
+const DIST = path.join(ROOT, 'dist');
+
+const REPO_URL = 'https://github.com/SBGAYCHITT/PeBble_lunchar';
+
+// 最终域名：Pages 构建时注入 CF_PAGES_URL；本地构建用 SITE_ORIGIN 覆盖。
+// 顺序很重要 —— 换了域名只要改这里，页面里的「更新源」说明自动跟着变。
+const ORIGIN = (process.env.CF_PAGES_URL || process.env.SITE_ORIGIN || 'https://pebble-site-oea.pages.dev')
+  .replace(/\/+$/, '');
+
+/* ---------------- 与 lib.ts 保持一致的纯函数 ---------------- */
+
+const esc = (s) =>
+  String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+function humanSize(n) {
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  if (n < 1000) return `${n} B`;
+  if (n < 1000 * 1000) return `${(n / 1000).toFixed(1)} KB`;
+  if (n < 1000 * 1000 * 1000) return `${(n / 1e6).toFixed(1)} MB`;
+  return `${(n / 1e9).toFixed(2)} GB`;
+}
+
+function renderReleases(list, currentVersion) {
+  if (!Array.isArray(list) || list.length === 0) {
+    return '<p class="rel-empty">还没有记录版本历史。</p>';
+  }
+  return list
+    .map((r) => {
+      const isCurrent = String(r.version).replace(/^v/i, '') === currentVersion.replace(/^v/i, '');
+      const items = (r.items || []).map((x) => `<li>${esc(x)}</li>`).join('');
+      return `<article class="rel${isCurrent ? ' is-current' : ''}">
+  <header class="rel-head">
+    <h2>v${esc(String(r.version).replace(/^v/i, ''))}</h2>
+    <time>${esc(r.date)}</time>
+    ${isCurrent ? '<span class="tag">当前版本</span>' : ''}
+  </header>
+  <p class="rel-title">${esc(r.title)}</p>
+  <ul class="rel-list">${items}</ul>
+</article>`;
+    })
+    .join('\n');
+}
+
+/** 缺 key 就保留原样：忘了填要当场看得见，别渲染出一个空按钮 */
+function render(tpl, vars) {
+  return tpl.replace(
+    /\{\{([A-Z0-9_]+)\}\}/g,
+    (whole, key) => Object.prototype.hasOwnProperty.call(vars, key) ? vars[key] : whole,
+  );
+}
+
+/* ---------------- 读数 + 校验 ---------------- */
+
+const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
+
+const feed = readJson(path.join(ROOT, 'data', 'latest.json'));
+const releases = readJson(path.join(ROOT, 'data', 'releases.json'));
+
+const problems = [];
+if (!feed.version) problems.push('latest.json 缺 version');
+if (!feed.url) problems.push('latest.json 缺 url');
+if (!/^[0-9a-f]{64}$/i.test(String(feed.sha256 || ''))) {
+  problems.push('latest.json 的 sha256 不是 64 位十六进制（客户端不会自动安装）');
+}
+if (!Number.isFinite(Number(feed.size)) || Number(feed.size) <= 0) {
+  problems.push('latest.json 缺 size（下载进度条会没有底）');
+}
+if (problems.length) {
+  console.error('\n构建中止，清单有问题：');
+  for (const p of problems) console.error('  - ' + p);
+  process.exit(1);
+}
+
+/* ---------------- 渲染 ---------------- */
+
+const vars = {
+  ORIGIN: esc(ORIGIN),
+  VER: esc(feed.version.replace(/^v/i, '')),
+  DATE: esc(feed.publishedAt || '—'),
+  SIZE: esc(humanSize(feed.size)),
+  SIZE_BYTES: esc(String(feed.size || 0)),
+  SHA: esc(feed.sha256 || '（清单未提供校验值）'),
+  SHA_OK: feed.sha256 ? '1' : '',
+  URL: esc(feed.url || '#'),
+  FILE: esc(path.basename(new URL(feed.url).pathname) || `Pebble-Launcher-${feed.version}.exe`),
+  NOTES: esc(feed.notes || ''),
+  REPO: esc(REPO_URL),
+  RELEASES: renderReleases(releases, feed.version),
+  RELEASES_COUNT: esc(String(releases.length)),
+  YEAR: esc(String(new Date().getFullYear())),
+};
+
+fs.rmSync(DIST, { recursive: true, force: true });
+fs.mkdirSync(DIST, { recursive: true });
+
+/** 递归拷贝；.html 走模板替换 */
+function copyDir(from, to) {
+  for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+    const s = path.join(from, e.name);
+    const d = path.join(to, e.name);
+    if (e.isDirectory()) {
+      fs.mkdirSync(d, { recursive: true });
+      copyDir(s, d);
+    } else if (e.name.endsWith('.html')) {
+      fs.writeFileSync(d, render(fs.readFileSync(s, 'utf8'), vars));
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+copyDir(SRC, DIST);
+
+// 清单也要在站上有一份：客户端的更新源可以直指 /data/latest.json
+fs.mkdirSync(path.join(DIST, 'data'), { recursive: true });
+for (const f of ['latest.json', 'releases.json']) {
+  fs.copyFileSync(path.join(ROOT, 'data', f), path.join(DIST, 'data', f));
+}
+
+// 静态站没有 main.ts 的路由，用重写把老接口路径接回静态文件。
+// 200 = rewrite（地址栏不变），客户端代码不用改。
+fs.writeFileSync(
+  path.join(DIST, '_redirects'),
+  [
+    '/api/update/latest    /data/latest.json     200',
+    '/api/update/latest/   /data/latest.json     200',
+    '/api/releases         /data/releases.json   200',
+    '',
+  ].join('\n'),
+);
+
+fs.writeFileSync(
+  path.join(DIST, '_headers'),
+  [
+    '/*',
+    '  X-Content-Type-Options: nosniff',
+    '  Referrer-Policy: no-referrer',
+    '',
+    '/data/*',
+    '  Content-Type: application/json; charset=utf-8',
+    '  Cache-Control: public, max-age=60',
+    '',
+    '/*.css',
+    '  Cache-Control: public, max-age=300',
+    '',
+    '/*.js',
+    '  Cache-Control: public, max-age=300',
+    '',
+    '/*.png',
+    '  Cache-Control: public, max-age=300',
+    '',
+  ].join('\n'),
+);
+
+fs.writeFileSync(
+  path.join(DIST, 'robots.txt'),
+  `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`,
+);
+
+fs.writeFileSync(
+  path.join(DIST, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${['/', '/changelog', '/docs'].map((p) => `  <url><loc>${ORIGIN}${p}</loc></url>`).join('\n')}
+</urlset>`,
+);
+
+// 和 main.ts 的 404 保持同一份样式
+fs.writeFileSync(
+  path.join(DIST, '404.html'),
+  `<!doctype html><html lang="zh-CN"><meta charset="utf-8">
+<title>404 · Pebble Launcher</title>
+<style>body{font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:#fff;color:#1b2029;
+display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
+main{text-align:center;padding:24px}
+h1{font-size:64px;margin:0;background:linear-gradient(135deg,#14c8b4,#0a7ff0);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+p{color:#6b7484}a{color:#0a7ff0}</style>
+<main><h1>404</h1><p>这个页面不存在。</p><p><a href="/">回首页</a> · <a href="/docs">看文档</a></p></main></html>`,
+);
+
+/* ---------------- 自检 ---------------- */
+
+const leftovers = [];
+function scan(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) scan(p);
+    else if (e.name.endsWith('.html')) {
+      const m = fs.readFileSync(p, 'utf8').match(/\{\{[A-Z0-9_]+\}\}/g);
+      if (m) leftovers.push(`${path.relative(DIST, p)}: ${[...new Set(m)].join(' ')}`);
+    }
+  }
+}
+scan(DIST);
+if (leftovers.length) {
+  console.error('\n构建失败，这些占位符没被替换掉：');
+  for (const l of leftovers) console.error('  - ' + l);
+  process.exit(1);
+}
+
+console.log(`构建完成 → dist/  (${ORIGIN})`);
+console.log(`  v${feed.version} · ${humanSize(feed.size)} · ${releases.length} 个版本记录`);

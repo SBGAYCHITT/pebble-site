@@ -3,6 +3,9 @@
 # 所以 public/updates/ 里的 exe 仍然会上传 —— 这正是自托管想要的效果。
 public/updates/*.exe
 
+# Cloudflare Pages 的构建产物（由 build.mjs 生成，不进仓库）
+dist/
+
 # Deno 缓存
 .deno/
 
