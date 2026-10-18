@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pebble Lunchar — 离线也能好好玩的 Minecraft 启动器</title>
-<meta name="description" content="Pebble Lunchar 是一个 Windows 上的 Minecraft 启动器：单文件免安装，存档时光机、世界版本控制、性能诊断、Mod 管理全部在本地完成。">
+<title>Pebble Launcher — 不用联网也能好好玩的 Minecraft 启动器</title>
+<meta name="description" content="Pebble Launcher 是一个 Windows 上的 Minecraft 启动器：一个文件、双击就能玩。存档能找回、两份世界能合并、卡了能查原因、Mod 一键装，全部在你自己的电脑上完成。">
 <meta name="theme-color" content="#ffffff">
-<meta property="og:title" content="Pebble Lunchar — 离线也能好好玩的 Minecraft 启动器">
-<meta property="og:description" content="单文件免安装 · 存档时光机 · 世界版本控制 · 性能诊断 · Mod 管理。全部在本地完成。">
+<meta property="og:title" content="Pebble Launcher — 不用联网也能好好玩的 Minecraft 启动器">
+<meta property="og:description" content="一个文件，双击就能玩。存档能找回 · 世界能合并 · 卡了能查原因 · Mod 一键装。">
 <meta property="og:type" content="website">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
@@ -53,7 +53,7 @@
   <div class="wrap nav-inner">
     <a class="brand" href="/">
       <img class="mark" src="/logo.png" alt="" width="34" height="34" decoding="async">
-      <span>Pebble <em>Lunchar</em></span>
+      <span>Pebble <em>Launcher</em></span>
     </a>
     <nav class="nav-links">
       <a href="/#features">功能</a>
@@ -68,71 +68,71 @@
 
 <section class="hero">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot"></span>Windows 10 / 11 · x64 · 免安装</span>
+    <span class="eyebrow"><span class="dot"></span>Windows 10 / 11 · 64 位 · 免安装</span>
     <h1>离线也能<span class="hao">好</span>好玩的<br><span class="grad">Minecraft 启动器</span></h1>
     <p class="lead">
-      不依赖任何在线服务，不收集任何数据。存档备份、世界合并、性能归因、Mod 管理
-      —— 那些平时要凑四五个工具才干得完的事，这里一步做完。
+      不用注册，也不用联网。存档丢了能找回来，两份世界能合成一份，
+      卡了能查清为什么，Mod 点一下就装好 —— 一个启动器全包了。
     </p>
     <div class="cta">
       <a class="btn primary" href="{{URL}}" rel="noopener noreferrer">下载 v{{VER}} · {{SIZE}}</a>
       <a class="btn" href="/changelog">看看改了什么</a>
     </div>
-    <p class="meta">v{{VER}} · {{DATE}} 发布 · SHA-256 校验值见下方</p>
+    <p class="meta">v{{VER}} · {{DATE}} 发布 · 文件指纹见下方</p>
   </div>
 </section>
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat"><div class="n">{{SIZE}}</div><div class="l">单文件，免安装</div></div>
-    <div class="stat"><div class="n">0</div><div class="l">遥测 / 上报</div></div>
-    <div class="stat"><div class="n">本地</div><div class="l">断网也能用</div></div>
-    <div class="stat"><div class="n">MIT</div><div class="l">开源</div></div>
+    <div class="stat"><div class="n">{{SIZE}}</div><div class="l">一个文件，不用安装</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">不收集你的数据</div></div>
+    <div class="stat"><div class="n">本地</div><div class="l">断网也能玩</div></div>
+    <div class="stat"><div class="n">MIT</div><div class="l">开源免费</div></div>
   </div>
 </div>
 
 <section class="section" id="features">
   <div class="wrap">
     <div class="section-head">
-      <h2>启动只是它最小的一件事</h2>
-      <p>下面六块能力都在本地跑，不需要注册账号，也不需要联网授权。</p>
+      <h2>启动游戏只是它最基础的功能</h2>
+      <p>下面这些都不用注册账号，也不用联网授权，全在你自己电脑上跑。</p>
     </div>
     <div class="features">
 
       <div class="feat">
         <svg class="ico"><use href="#i-clock"/></svg>
-        <h3>存档时光机</h3>
-        <p>按 1 MB 块做增量去重，同样内容只存一次。每次启动游戏前自动打快照，一键回滚，而且回滚本身也会先存一份 —— 回滚也能反悔。</p>
+        <h3>存档后悔药</h3>
+        <p>每次开游戏前自动存一份，想回到昨天的进度，点一下就回去。回去发现不对？还能再退回来。</p>
       </div>
 
       <div class="feat">
         <svg class="ico"><use href="#i-cube"/></svg>
-        <h3>世界版本控制与合并</h3>
-        <p>区块级 blame、时间轴回放、三方合并。冲突不再是「整块取某一侧」：两侧的方块改动都能保留，零损失时自动合流。</p>
+        <h3>两份世界合成一份</h3>
+        <p>和朋友各建了一半？把两个世界合起来，两边的房子都留着，不用二选一。</p>
       </div>
 
       <div class="feat">
         <svg class="ico"><use href="#i-chart"/></svg>
-        <h3>性能诊断</h3>
-        <p>帧时间直方图看 P99，卡顿归因先扣掉「随机重合」的基线再下结论，两次游戏会话可以逐项对比，告诉你到底哪次更差。</p>
+        <h3>卡了，告诉你为什么</h3>
+        <p>掉帧不用瞎猜。它会看卡的那几秒前后发生了什么，找出最可能的原因；实在说不清，就直接说「不知道」。</p>
       </div>
 
       <div class="feat">
         <svg class="ico"><use href="#i-grid"/></svg>
-        <h3>Mod 与内容管理</h3>
-        <p>Modrinth 开箱即用，CurseForge 填一次 Key 即可。识别的是 jar 里的真实元数据而不是文件名，装完按 SHA-1 比对，不会重复下载。</p>
+        <h3>装 Mod 不用翻文件夹</h3>
+        <p>在 Modrinth 里搜到就能装，CurseForge 填一次码就行。装过的会认出来，不会重复下载。</p>
       </div>
 
       <div class="feat">
         <svg class="ico"><use href="#i-pick"/></svg>
-        <h3>离线合成规划</h3>
-        <p>「做这把镐要带多少东西下矿」—— 多目标一起算，按你的库存裁剪出「还差多少」，换成新配方表时先给你看差异。</p>
+        <h3>下矿前先算清楚</h3>
+        <p>「做这把镐还差几个钻石」—— 一次把好几样东西一起算，按你箱子里现有的材料，告诉你还缺什么。</p>
       </div>
 
       <div class="feat">
         <svg class="ico"><use href="#i-copy2"/></svg>
-        <h3>实例与迁移</h3>
-        <p>多实例完全隔离，换启动器不用重装：PCL2 / HMCL / 官方 / Prism 的账户与配置可以一键搬过来。</p>
+        <h3>换启动器不用重装</h3>
+        <p>原来用 PCL2、HMCL 的，账号和设置能直接搬过来，存档也不用挪位置。</p>
       </div>
 
     </div>
@@ -142,24 +142,24 @@
 <section class="section alt">
   <div class="wrap">
     <div class="section-head">
-      <h2>三件别人通常不做的事</h2>
-      <p>这三处都是「做完之后才发现之前一直在将就」的地方。</p>
+      <h2>三个小心思，用过就回不去</h2>
+      <p>都是些「原来还能这样」的细节。</p>
     </div>
     <div class="deep">
       <div class="deep-item">
         <div class="num">01</div>
-        <h3>备份不靠全量拷贝</h3>
-        <p>1 GB 的存档存 20 份就是 20 GB，所以多数启动器只敢在你想起来的时候备一次。按块去重之后，第二次快照通常只多几 MB，才敢做到<code>每次启动都存</code>。</p>
+        <h3>备份不占硬盘</h3>
+        <p>一个存档备份 20 次就要 20 份空间，所以大多数启动器只敢偶尔备一次。这里重复的内容只存一份，第二次备份通常只多几 MB —— 才敢做到<code>每次开游戏都备份</code>。</p>
       </div>
       <div class="deep-item">
         <div class="num">02</div>
-        <h3>合并能写到区块字节</h3>
-        <p>「整块取 A 还是取 B」必然丢改动。这里把两个区块解到方块级合流，再按原 NBT 类型写回 —— 不报错、不改类型、游戏读得出来。</p>
+        <h3>合并的时候不丢建筑</h3>
+        <p>不是让你选「留这份还是留那份」，而是两边的改动都留下。合完进游戏，两边的房子都在。</p>
       </div>
       <div class="deep-item">
         <div class="num">03</div>
-        <h3>归因会先算基线</h3>
-        <p>GC 越频繁，「卡顿前 2 秒有 GC」越接近必然。所以先把随机重合的概率减掉，剩下的才叫相关；实在判不出来的直接写「未确定」，不硬编一个原因。</p>
+        <h3>查不出来就说查不出来</h3>
+        <p>卡顿前两秒刚好在清理内存，不代表就是它干的。这里会先把「碰巧」排除掉；实在判断不了就写「不确定」，不硬编一个理由骗你。</p>
       </div>
     </div>
   </div>
@@ -169,28 +169,28 @@
   <div class="wrap">
     <div class="section-head">
       <h2>下载</h2>
-      <p>单个 exe，双击就能用。不写注册表，不往系统目录塞东西。</p>
+      <p>一个 exe，双击就能玩。不用安装，想删掉直接删这一个文件就行。</p>
     </div>
 
     <div class="dl-card">
       <div class="dl-main">
-        <h2>Pebble Lunchar v{{VER}}</h2>
-        <p class="dl-sub">Windows 10 / 11 · x64 · portable 单文件</p>
+        <h2>Pebble Launcher v{{VER}}</h2>
+        <p class="dl-sub">Windows 10 / 11 · 64 位 · 免安装</p>
         <a class="btn primary big" href="{{URL}}" rel="noopener noreferrer">下载 v{{VER}} · {{SIZE}}</a>
-        <p class="dl-hint">下载链接与启动器自动更新走的是同一份清单，所以这里显示的版本一定就是它认的版本。</p>
+        <p class="dl-hint">这个按钮和启动器里的「检查更新」读的是同一份版本信息，所以不会出现「网页说新版、启动器说没有」的情况。</p>
       </div>
       <dl class="dl-facts">
         <div><dt>版本</dt><dd>v{{VER}}</dd></div>
         <div><dt>发布</dt><dd>{{DATE}}</dd></div>
         <div><dt>大小</dt><dd>{{SIZE}}<span style="color:var(--faint)">（{{SIZE_BYTES}} 字节）</span></dd></div>
-        <div class="full"><dt>SHA-256</dt><dd><code id="sha">{{SHA}}</code><button class="copy" data-copy="#sha" type="button">复制</button></dd></div>
+        <div class="full"><dt>文件指纹</dt><dd><code id="sha">{{SHA}}</code><button class="copy" data-copy="#sha" type="button">复制</button></dd></div>
       </dl>
     </div>
 
     <div class="verify">
-      <h3>下完先校验</h3>
-      <pre><code>certutil -hashfile Pebble-Lunchar-{{VER}}.exe SHA256</code></pre>
-      <p>输出应与上面的值一致（忽略空格，不分大小写）。启动器自动更新时也会做这一步，对不上就不装。</p>
+      <h3>想确认文件没下坏（可选）</h3>
+      <pre><code>certutil -hashfile {{FILE}} SHA256</code></pre>
+      <p>弹出的结果和上面那串一样就没问题（空格、大小写不影响）。启动器自动更新时也会自己查一遍，对不上就不装。</p>
     </div>
   </div>
 </section>
@@ -198,11 +198,9 @@
 <section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="note">
-      <b>为什么安装包放在 GitHub Releases？</b>
-      这个站跑在 Deno Deploy 的免费额度上，每月出网流量 20 GB —— 79 MB 的包大约 260 次下载就会用光，
-      然后站点直接停掉。所以安装包留在 GitHub，本站只保留一个跳转地址
-      <code>/api/update/file/…</code>，启动器自动更新用的也是它。流量够用时把包放进
-      <code>public/updates/</code> 即可改为自托管，清单不用动。
+      <b>安装包为什么放在 GitHub？</b>
+      这个网站是免费托管的，每个月只有 20 GB 流量。一个安装包就 79 MB，下二百多次就用完了，
+      整站会跟着停。所以安装包放在 GitHub，这里只负责告诉你最新版是哪个、去哪下。
     </div>
   </div>
 </section>
@@ -211,7 +209,7 @@
 
 <footer>
   <div class="wrap foot">
-    <div>© {{YEAR}} Pebble Lunchar · MIT License</div>
+    <div>© {{YEAR}} Pebble Launcher · MIT License</div>
     <div class="foot-links">
       <a href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a href="/changelog">更新日志</a>

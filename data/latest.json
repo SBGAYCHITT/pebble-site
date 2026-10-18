@@ -1,6 +1,6 @@
 {
   "version": "5.0.0",
-  "notes": "自动更新上线：检查 → 流式下载 → SHA-256 校验 → 替换重启。另含存档深度自检（字节级回写比对）。",
+  "notes": "现在能自己更新了：检查新版本、下载、核对文件，然后替你换上新版。存档也能做体检了。",
   "url": "https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.0.0/Pebble-Lunchar-5.0.0.exe",
   "sha256": "f6dde1f35c651bea12649ffef8f019048601a39d588a6d9a037fe338aa0ad6d0",
   "size": 79032992,

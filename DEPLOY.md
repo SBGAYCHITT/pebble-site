@@ -185,13 +185,13 @@ https://pebble-site.shitsmart.deno.net/api/update/health?probe=1
 ### 1. 打包并算校验值
 
 ```bat
-cd /d D:\apps\2026-09-12-10-14-18\pefebeb-lunchar
+cd /d D:\apps\2026-09-12-10-14-18\pefebeb-launcher
 npm run dist
 
-certutil -hashfile dist\Pebble-Lunchar-5.1.0.exe SHA256
-certutil -hashfile dist\Pebble-Lunchar-5.1.0.exe MD5
+certutil -hashfile dist\Pebble-Launcher-5.1.0.exe SHA256
+certutil -hashfile dist\Pebble-Launcher-5.1.0.exe MD5
 
-for %I in (dist\Pebble-Lunchar-5.1.0.exe) do @echo %~zI
+for %I in (dist\Pebble-Launcher-5.1.0.exe) do @echo %~zI
 ```
 
 `certutil` 的输出带空格，粘进 JSON 前**把空格去掉、转小写**。
@@ -202,7 +202,7 @@ for %I in (dist\Pebble-Lunchar-5.1.0.exe) do @echo %~zI
 打 tag、传 exe。装好 GitHub CLI 的话：
 
 ```bat
-gh release create v5.1.0 dist\Pebble-Lunchar-5.1.0.exe --title "v5.1.0" --notes-file ..\GITHUB-RELEASE-v5.1.0.md
+gh release create v5.1.0 dist\Pebble-Launcher-5.1.0.exe --title "v5.1.0" --notes-file ..\GITHUB-RELEASE-v5.1.0.md
 ```
 
 没有 `gh` 就网页传：`https://github.com/SBGAYCHITT/PeBble_lunchar/releases/new`
@@ -210,7 +210,7 @@ gh release create v5.1.0 dist\Pebble-Lunchar-5.1.0.exe --title "v5.1.0" --notes-
 传完把地址里的版本号换掉，**在浏览器打开一次**确认不是 404：
 
 ```
-https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Lunchar-5.1.0.exe
+https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Launcher-5.1.0.exe
 ```
 
 ### 3. 改 `data/latest.json`
@@ -219,7 +219,7 @@ https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Lun
 {
   "version": "5.1.0",
   "notes": "一句话说清这版最要紧的改动",
-  "url": "https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Lunchar-5.1.0.exe",
+  "url": "https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Launcher-5.1.0.exe",
   "sha256": "把 certutil 的结果去空格转小写粘这里",
   "size": 79032992,
   "publishedAt": "2026-10-20"
@@ -283,7 +283,7 @@ https://pebble-site.shitsmart.deno.net/api/update/health?probe=1
 2. `url` 改成相对地址：
 
 ```json
-"url": "/api/update/file/Pebble-Lunchar-5.1.0.exe"
+"url": "/api/update/file/Pebble-Launcher-5.1.0.exe"
 ```
 
 以 `/` 开头会自动按当前域名补全，**换域名不用改数据**。

@@ -31,7 +31,7 @@ function eq<T>(actual: T, expect: T, msg: string): void {
 const GOOD = {
   version: '5.0.0',
   notes: '测试',
-  url: 'https://example.com/Pebble-Lunchar-5.0.0.exe',
+  url: 'https://example.com/Pebble-Launcher-5.0.0.exe',
   sha256: 'f6dde1f35c651bea12649ffef8f019048601a39d588a6d9a037fe338aa0ad6d0',
   size: 79032992,
   publishedAt: '2026-10-17',
@@ -85,7 +85,7 @@ Deno.test('validateFeed：sha256 长度不对是 error', () => {
 Deno.test('validateFeed：url 必须是 http(s)', () => {
   ok(!validateFeed({ ...GOOD, url: 'ftp://x/y.exe' }).ok, 'ftp 应拒绝');
   ok(!validateFeed({ ...GOOD, url: '' }).ok, '空 url 应拒绝');
-  ok(!validateFeed({ ...GOOD, url: 'Pebble-Lunchar.exe' }).ok, '裸文件名应拒绝');
+  ok(!validateFeed({ ...GOOD, url: 'Pebble-Launcher.exe' }).ok, '裸文件名应拒绝');
 });
 
 Deno.test('validateFeed：size 允许字符串，非法值退回 0 + 警告', () => {
@@ -145,7 +145,7 @@ Deno.test('safeRelPath：路径穿越全部拒绝', () => {
 /* ---------------- isExeName ---------------- */
 
 Deno.test('isExeName：只认 .exe 且字符受限', () => {
-  ok(isExeName('Pebble-Lunchar-5.0.0.exe'), '正常文件名应通过');
+  ok(isExeName('Pebble-Launcher-5.0.0.exe'), '正常文件名应通过');
   ok(isExeName('a.exe'), '最短文件名应通过');
   ok(!isExeName('a.zip'), '非 exe 应拒绝');
   ok(!isExeName('../a.exe'), '带路径应拒绝');

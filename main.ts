@@ -1,4 +1,4 @@
-// Pebble Lunchar 官网 + 更新源（Deno Deploy）
+// Pebble Launcher 官网 + 更新源（Deno Deploy）
 //
 // 两条职责故意放在同一个应用里：
 //   1. 官网（静态页，服务端把版本号填进模板 —— 单一数据源）
@@ -171,6 +171,9 @@ async function renderPage(name: string, feed: Feed, releases: Release[], origin:
     SHA: esc(feed.sha256 || '（清单未提供校验值）'),
     SHA_OK: feed.sha256 ? '1' : '',
     URL: esc(feed.url || '#'),
+    // 安装包的文件名从清单 url 里取：文档里的校验命令要跟玩家真正下到的文件名一致，
+    // 以后换了包名（或改成自托管）这句说明自动跟着变，不用手改页面
+    FILE: esc(basename(feed.url) || `Pebble-Launcher-${feed.version.replace(/^v/i, '')}.exe`),
     NOTES: esc(feed.notes || ''),
     REPO: esc(REPO_URL),
     RELEASES: renderReleases(releases, feed.version),
@@ -183,7 +186,7 @@ async function renderPage(name: string, feed: Feed, releases: Release[], origin:
 function notFound(): Response {
   return htmlResp(
     `<!doctype html><html lang="zh-CN"><meta charset="utf-8">
-<title>404 · Pebble Lunchar</title>
+<title>404 · Pebble Launcher</title>
 <style>body{font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:#fff;color:#1b2029;
 display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
 main{text-align:center;padding:24px}
