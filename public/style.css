@@ -111,41 +111,32 @@ h1 .grad {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* 标题里的「好」：在文本行里横向复制。
+/* 标题里的「好」：在文本行里自动横向复制，长出来就不再收回去。
  *
- * 副本是**真正的行内元素**，插在「好」后面 —— 不是浮在字上的幽灵。
- * 起点 margin-left: -1em 把副本收回主字里（中文字宽正好 1em），
- * 滑到 0 的过程就是把后面的「好玩」一节一节向右推开。
+ * 副本是**真正的行内元素**，插在前一个字后面 —— 不是浮在字上的幽灵。
+ * 起点 margin-left: -1em 让它从主字里长出来（中文字宽正好 1em），
+ * 滑到 0 时占满自己的一个字位，于是「好玩」被一节一节向右推开。
  *
- * 所以不需要任何混合模式：重叠阶段 opacity 很低，展开后每份占满自己的 1em，
- * 谁也不挡谁。基线、字距全程不变，只有这一行的总宽在变。
+ * 动画用 both 停在最后一帧，脚本也不会删除它：复制完就是最终版式，
+ * 字距、基线都不再动，只有这一行比原来宽了几个字。
  */
 .hao { position: relative; display: inline-block; }
-.hao.bloom { animation: haoPulse .62s cubic-bezier(.22, .7, .3, 1); }
 .hao-echo {
   display: inline-block;
-  margin-left: -1em; /* 先缩回主字里，再滑出去 */
+  margin-left: -1em; /* 起点：完全缩进前一个字里 */
   opacity: 0;
   color: var(--accent2);
   pointer-events: none;
   white-space: nowrap;
-  animation: haoSplit 1.2s cubic-bezier(.25, .8, .3, 1) both;
+  /* 从字的左边缘横向撑开，像笔画被一格一格复制出去 */
+  transform-origin: 0 50%;
+  animation: haoSplit .66s cubic-bezier(.2, .78, .28, 1) both;
 }
-@keyframes haoPulse {
-  0% { transform: scaleX(1); }
-  30% { transform: scaleX(1.14); }
-  64% { transform: scaleX(.99); }
-  100% { transform: scaleX(1); }
-}
-/* 55% 前滑完，中间停一拍（让人看清"真多了三个字"），最后原路收回去。
- * 收和放都是 1em，所以整段动画里字距不会跳，只有行宽在呼吸。
- */
+/* 没有"收回去"的关键帧 —— 复制出来的字就是标题的一部分，停在这里不动。 */
 @keyframes haoSplit {
-  0% { margin-left: -1em; opacity: 0; }
-  24% { opacity: calc(var(--o, .7) * .34); }
-  55% { margin-left: 0; opacity: var(--o, .7); }
-  76% { margin-left: 0; opacity: var(--o, .7); }
-  100% { margin-left: -1em; opacity: 0; }
+  0% { margin-left: -1em; opacity: 0; transform: scaleX(.34); }
+  34% { opacity: var(--o, 1); }
+  100% { margin-left: 0; opacity: var(--o, 1); transform: scaleX(1); }
 }
 .lead {
   max-width: 660px; margin: 20px auto 0;
@@ -353,11 +344,11 @@ footer { border-top: 1px solid var(--line); padding: 34px 0 46px; }
   .brand .mark { width: 30px; height: 30px; }
 }
 
-/* 系统开了「减少动态效果」就老实待着：海只画一帧静景，好字不增殖 */
+/* 系统开了「减少动态效果」就老实待着：海只画一帧静景，字直接落位不再滑出 */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .hao-echo { display: none; }
-  .hao.bloom { animation: none; }
+  /* 复制出来的字照样出现，只是没有过渡 —— 内容不因为动效开关而不同 */
+  .hao-echo { animation: none; margin-left: 0; opacity: var(--o, 1); }
   .brand:hover .mark { transform: none; }
   .feat, .btn { transition: none; }
 }

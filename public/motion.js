@@ -270,67 +270,76 @@
     }
   }
 
-  /* ======================= 二、「好」字增殖 ======================= */
+  /* ======================= 二、「好」字自动复制 ======================= */
 
   var hao = document.querySelector('.hao');
-  if (hao && !reduceMotion) {
-    var busy = false;
-    var lastHover = 0;
+  var h1 = hao ? hao.closest('h1') : null;
 
-    function bloom() {
-      if (busy) return;
-      busy = true;
+  if (hao && h1) {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var MAX_ECHO = 3; // 最多再多三个「好」
+    var baseH = 0; // 没复制之前的标题高度，用来判断有没有被撑到换行
+    var timer = 0;
 
-      // 重启动画：先摘类、强制重排、再挂回去
-      hao.classList.remove('bloom');
-      void hao.offsetWidth;
-      hao.classList.add('bloom');
+    // 副本是 .hao 的兄弟节点（插在它后面），不在它内部 ——
+    // 所以必须从 h1 范围里找，用 hao.querySelectorAll 永远是 0，会一直加下去
+    function echoes() {
+      return h1.querySelectorAll('.hao-echo');
+    }
 
-      // 副本是插进文本流的行内元素，插在「好」后面，
-      // 自己会占 1em，后面的「好玩」被推开 —— 这是"文本里多出字"，不是贴上去的装饰。
-      var count = window.innerWidth < 760 ? 2 : 3;
-      var anchor = hao;
+    function addOne() {
+      var prev = echoes();
+      var echo = document.createElement('span');
+      echo.className = 'hao-echo';
+      echo.textContent = '好';
+      echo.setAttribute('aria-hidden', 'true');
+      // 越远越淡：是同一个字的余像，不是三个一模一样的黑块
+      echo.style.setProperty('--o', (1 - prev.length * 0.14).toFixed(2));
 
-      for (var i = 1; i <= count; i++) {
-        var echo = document.createElement('span');
-        echo.className = 'hao-echo';
-        echo.textContent = '好';
-        echo.setAttribute('aria-hidden', 'true');
-        // 越远的越淡：三等分，才不会糊成一整块青色
-        echo.style.setProperty('--o', (0.72 - (i - 1) * 0.2).toFixed(2));
-        // 隔 130ms 长一个：一个 → 两个 → 三个，看起来是一节节被推开的
-        echo.style.animationDelay = (i - 1) * 130 + 'ms';
-        anchor.after(echo);
-        anchor = echo;
+      // 先按"最终位置"占好位再量行高 —— 动画起点是 -1em，
+      // 插进去的瞬间还没撑开，那时候量不出会不会换行
+      echo.style.animation = 'none';
+      echo.style.marginLeft = '0';
+      echo.style.opacity = '0';
+      (prev.length ? prev[prev.length - 1] : hao).after(echo);
 
-        (function (el) {
-          // 延迟 260ms + 动画 1.2s = 1.46s，1.6s 清掉留余量
-          window.setTimeout(function () {
-            if (el.parentNode) el.parentNode.removeChild(el);
-          }, 1600);
-        })(echo);
+      if (h1.offsetHeight > baseH + 1) {
+        // 撑破了就撤回：宁可少一个字，也不让标题折行
+        echo.remove();
+        return false;
       }
 
-      window.setTimeout(function () {
-        busy = false;
-      }, 1250);
+      // 交回给 CSS 动画：从 -1em 滑到 0，停在最后一帧
+      echo.style.animation = '';
+      echo.style.marginLeft = '';
+      echo.style.opacity = '';
+      return true;
     }
 
-    // 没人搭理的时候自己也动，4.8 秒一次，不抢注意力
-    window.setInterval(function () {
-      if (document.visibilityState === 'visible') bloom();
-    }, 4800);
-
-    // 鼠标扫过标题时更积极一点，但至少隔 1.6 秒才来一次
-    // （比动画总时长稍长，避免上一轮还没收完就又插三个）
-    var h1 = document.querySelector('h1');
-    if (h1) {
-      h1.addEventListener('pointerenter', function () {
-        var now = Date.now();
-        if (now - lastHover < 1600) return;
-        lastHover = now;
-        bloom();
-      });
+    function grow() {
+      window.clearTimeout(timer);
+      if (echoes().length >= MAX_ECHO) return;
+      if (!addOne()) return;
+      timer = window.setTimeout(grow, reduced ? 30 : 700);
     }
+
+    // 等首屏排完再量基线高度，否则量到的是字体还没上齐的中间态
+    window.setTimeout(function () {
+      baseH = h1.offsetHeight;
+      grow();
+    }, 700);
+
+    // 窗口变窄可能就装不下了：全部收掉，按新宽度重新长一遍
+    var resizeTimer = 0;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        window.clearTimeout(timer);
+        var list = echoes();
+        for (var i = 0; i < list.length; i++) list[i].remove();
+        baseH = h1.offsetHeight;
+        grow();
+      }, 220);
+    });
   }
 })();
