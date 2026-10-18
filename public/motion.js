@@ -286,28 +286,34 @@
       void hao.offsetWidth;
       hao.classList.add('bloom');
 
-      // 三个残影，间距 .22em —— 正好落在「好」与下一个「好」之间的空隙里，
-      // 不会糊到后一个字上
-      for (var i = 1; i <= 3; i++) {
-        (function (n) {
-          // 隔 110ms 出一个：先一个，再两个，再三个 —— 是"变多"，不是一闪
+      // 副本是插进文本流的行内元素，插在「好」后面，
+      // 自己会占 1em，后面的「好玩」被推开 —— 这是"文本里多出字"，不是贴上去的装饰。
+      var count = window.innerWidth < 760 ? 2 : 3;
+      var anchor = hao;
+
+      for (var i = 1; i <= count; i++) {
+        var echo = document.createElement('span');
+        echo.className = 'hao-echo';
+        echo.textContent = '好';
+        echo.setAttribute('aria-hidden', 'true');
+        // 越远的越淡：三等分，才不会糊成一整块青色
+        echo.style.setProperty('--o', (0.72 - (i - 1) * 0.2).toFixed(2));
+        // 隔 130ms 长一个：一个 → 两个 → 三个，看起来是一节节被推开的
+        echo.style.animationDelay = (i - 1) * 130 + 'ms';
+        anchor.after(echo);
+        anchor = echo;
+
+        (function (el) {
+          // 延迟 260ms + 动画 1.2s = 1.46s，1.6s 清掉留余量
           window.setTimeout(function () {
-            var echo = document.createElement('span');
-            echo.className = 'hao-echo';
-            echo.textContent = '好';
-            echo.setAttribute('aria-hidden', 'true');
-            echo.style.setProperty('--i', String(n));
-            hao.appendChild(echo);
-            window.setTimeout(function () {
-              if (echo.parentNode) echo.parentNode.removeChild(echo);
-            }, 1000);
-          }, n * 110);
-        })(i);
+            if (el.parentNode) el.parentNode.removeChild(el);
+          }, 1600);
+        })(echo);
       }
 
       window.setTimeout(function () {
         busy = false;
-      }, 640);
+      }, 1250);
     }
 
     // 没人搭理的时候自己也动，4.8 秒一次，不抢注意力
@@ -315,12 +321,13 @@
       if (document.visibilityState === 'visible') bloom();
     }, 4800);
 
-    // 鼠标扫过标题时更积极一点，但至少隔 1.1 秒才来一次
+    // 鼠标扫过标题时更积极一点，但至少隔 1.6 秒才来一次
+    // （比动画总时长稍长，避免上一轮还没收完就又插三个）
     var h1 = document.querySelector('h1');
     if (h1) {
       h1.addEventListener('pointerenter', function () {
         var now = Date.now();
-        if (now - lastHover < 1100) return;
+        if (now - lastHover < 1600) return;
         lastHover = now;
         bloom();
       });

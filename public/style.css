@@ -111,39 +111,41 @@ h1 .grad {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* 标题里的「好」：横向增殖。
- * 中文字宽是满格的，同一行左右没有空隙 —— 残影要是留在基线上，就会糊住后面那个「好」。
- * 所以让它一边往右飘、一边往上抬，从字形上方的空白里浮出去，谁也不挡。
+/* 标题里的「好」：在文本行里横向复制。
+ *
+ * 副本是**真正的行内元素**，插在「好」后面 —— 不是浮在字上的幽灵。
+ * 起点 margin-left: -1em 把副本收回主字里（中文字宽正好 1em），
+ * 滑到 0 的过程就是把后面的「好玩」一节一节向右推开。
+ *
+ * 所以不需要任何混合模式：重叠阶段 opacity 很低，展开后每份占满自己的 1em，
+ * 谁也不挡谁。基线、字距全程不变，只有这一行的总宽在变。
  */
 .hao { position: relative; display: inline-block; }
-.hao.bloom { animation: haoPulse .58s cubic-bezier(.22, .7, .3, 1); }
+.hao.bloom { animation: haoPulse .62s cubic-bezier(.22, .7, .3, 1); }
 .hao-echo {
-  position: absolute; left: 0; top: 0;
-  /* 基点定在上边：缩放时底边不会往下长，才不会压到字形头上 */
-  transform-origin: 50% 0;
-  color: var(--accent2); pointer-events: none;
-  animation: haoEcho .95s cubic-bezier(.2, .7, .3, 1) forwards;
+  display: inline-block;
+  margin-left: -1em; /* 先缩回主字里，再滑出去 */
+  opacity: 0;
+  color: var(--accent2);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: haoSplit 1.2s cubic-bezier(.25, .8, .3, 1) both;
 }
 @keyframes haoPulse {
   0% { transform: scaleX(1); }
-  34% { transform: scaleX(1.14); }
+  30% { transform: scaleX(1.14); }
+  64% { transform: scaleX(.99); }
   100% { transform: scaleX(1); }
 }
-/* 三个复制体依次冒出来、横向排开：一个 → 两个 → 三个。
- * 位置卡在字顶之上（底边 -0.02em），所以不会盖住任何字形，
- * 也不需要跟行宽抢地方 —— --i 由脚本写成 1/2/3，间距固定 0.42em。
+/* 55% 前滑完，中间停一拍（让人看清"真多了三个字"），最后原路收回去。
+ * 收和放都是 1em，所以整段动画里字距不会跳，只有行宽在呼吸。
  */
-@keyframes haoEcho {
-  0% { opacity: 0; transform: translate(0, -.06em) scale(.34); }
-  30% { opacity: .72; }
-  72% {
-    opacity: .62;
-    transform: translate(calc(var(--i) * .56em), -.55em) scale(.58);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(calc(var(--i) * .56em), -.62em) scale(.54);
-  }
+@keyframes haoSplit {
+  0% { margin-left: -1em; opacity: 0; }
+  24% { opacity: calc(var(--o, .7) * .34); }
+  55% { margin-left: 0; opacity: var(--o, .7); }
+  76% { margin-left: 0; opacity: var(--o, .7); }
+  100% { margin-left: -1em; opacity: 0; }
 }
 .lead {
   max-width: 660px; margin: 20px auto 0;
