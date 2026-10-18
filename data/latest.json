@@ -2,7 +2,7 @@
   "version": "5.1.0",
   "notes": "改名 Pebble Launcher；更新不用自己配（启动自动查版本）；修好 Mod 列表为空。",
   "url": "https://github.com/SBGAYCHITT/PeBble_lunchar/releases/download/v5.1.0/Pebble-Launcher-5.1.0.exe",
-  "sha256": "233df48531febb216f2d5545bdd933cd918972c8d68beeab0b7ab11adc885047",
-  "size": 79135256,
+  "sha256": "9583089ba088c66d647be52ae761f544d5462ac3b2d3f8e1a66d08d638a4fac2",
+  "size": 79084272,
   "publishedAt": "2026-10-18"
 }
