@@ -130,7 +130,7 @@ h1 .grad {
   white-space: nowrap;
   /* 从字的左边缘横向撑开，像笔画被一格一格复制出去 */
   transform-origin: 0 50%;
-  animation: haoSplit .66s cubic-bezier(.2, .78, .28, 1) both;
+  animation: haoSplit .58s cubic-bezier(.2, .78, .28, 1) both;
 }
 /* 没有"收回去"的关键帧 —— 复制出来的字就是标题的一部分，停在这里不动。 */
 @keyframes haoSplit {

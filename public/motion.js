@@ -277,7 +277,10 @@
 
   if (hao && h1) {
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var MAX_ECHO = 3; // 最多再多三个「好」
+    // 复制出来的「好」还是三个，数量不变，只是整体提速：
+    // 单次动画 0.58s，间隔 0.18s，最后一个 0.94s 收尾 —— 1 秒内全部完成。
+    var MAX_ECHO = 3;
+    var STEP = 180; // 两次复制之间的间隔（ms）
     var baseH = 0; // 没复制之前的标题高度，用来判断有没有被撑到换行
     var timer = 0;
 
@@ -320,14 +323,15 @@
       window.clearTimeout(timer);
       if (echoes().length >= MAX_ECHO) return;
       if (!addOne()) return;
-      timer = window.setTimeout(grow, reduced ? 30 : 700);
+      timer = window.setTimeout(grow, reduced ? 20 : STEP);
     }
 
-    // 等首屏排完再量基线高度，否则量到的是字体还没上齐的中间态
+    // 等首屏排完再量基线高度，否则量到的是字体还没上齐的中间态。
+    // 页面没有外链字体，320ms 足够；总量控制在 1 秒出头
     window.setTimeout(function () {
       baseH = h1.offsetHeight;
       grow();
-    }, 700);
+    }, 320);
 
     // 窗口变窄可能就装不下了：全部收掉，按新宽度重新长一遍
     var resizeTimer = 0;
