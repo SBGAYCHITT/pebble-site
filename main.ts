@@ -100,6 +100,27 @@ async function loadReleases(): Promise<Release[]> {
 
 const SEC = { 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
 
+/**
+ * Deno Deploy 给每次部署注入的 ID。本地 `deno run` 时不存在。
+ *
+ * 存在的意义只有一个：回答「我明明推了，怎么还是旧页面」。
+ * 拿线上 `x-build` 和本地提交比一下，就能分清是浏览器缓存、还是部署压根没触发。
+ */
+const DEPLOY_ID = Deno.env.get('DENO_DEPLOYMENT_ID') ?? '';
+
+/** 给所有响应补上 `x-build`。拿不到部署 ID（本地跑）就原样返回。 */
+function withBuild(res: Response): Response {
+  if (!DEPLOY_ID) return res;
+  try {
+    const h = new Headers(res.headers);
+    h.set('x-build', DEPLOY_ID.slice(0, 8));
+    // 重新包一层而不是改 headers：从 fetch 拿到的 Headers 可能是只读的
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  } catch {
+    return res;
+  }
+}
+
 function json(body: unknown, status = 200, extra: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body, null, 2), {
     status,
@@ -337,6 +358,10 @@ async function handle(req: Request): Promise<Response> {
   if (pathname === '/api/update/health') {
     return await apiHealth(origin, url.searchParams.get('probe') === '1');
   }
+  // 浏览器里直接打开就能看：这次线上跑的是哪个构建
+  if (pathname === '/api/build') {
+    return json({ deploymentId: DEPLOY_ID || null, servedAt: new Date().toISOString() });
+  }
   if (pathname === '/api/releases') {
     return json(await loadReleases());
   }
@@ -410,12 +435,12 @@ Deno.serve(async (req: Request) => {
       try {
         await r.body?.cancel();
       } catch { /* 已经读完/已关闭都无所谓 */ }
-      return new Response(null, { status: r.status, headers: r.headers });
+      return withBuild(new Response(null, { status: r.status, headers: r.headers }));
     }
-    return await handle(req);
+    return withBuild(await handle(req));
   } catch (e) {
     console.error('[site] unhandled', e);
     // 不打栈给外面看：这类信息对用户没意义，对攻击者倒是有用
-    return textResp('internal error', 500);
+    return withBuild(textResp('internal error', 500));
   }
 });
