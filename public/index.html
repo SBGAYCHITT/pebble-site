@@ -14,6 +14,9 @@
 </head>
 <body>
 
+<!-- 背景的粒子海洋。纯装饰，不接事件（鼠标在 window 上听），层级压在内容下面 -->
+<canvas id="sea" aria-hidden="true"></canvas>
+
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-clock" viewBox="0 0 24 24">
     <rect x="9" y="2" width="6" height="2"/><rect x="5" y="4" width="14" height="2"/>
@@ -49,19 +52,7 @@
 <header class="nav">
   <div class="wrap nav-inner">
     <a class="brand" href="/">
-      <svg class="mark" viewBox="0 0 12 12" aria-hidden="true">
-        <defs>
-          <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#14c8b4"/><stop offset="1" stop-color="#0a7ff0"/>
-          </linearGradient>
-        </defs>
-        <g fill="url(#mg)">
-          <rect x="4" y="2" width="4" height="1"/><rect x="3" y="3" width="6" height="1"/>
-          <rect x="2" y="4" width="8" height="4"/><rect x="3" y="8" width="6" height="1"/>
-          <rect x="4" y="9" width="4" height="1"/>
-        </g>
-        <rect x="4" y="4" width="2" height="2" fill="#fff" opacity=".55"/>
-      </svg>
+      <img class="mark" src="/logo.png" alt="" width="34" height="34" decoding="async">
       <span>Pebble <em>Lunchar</em></span>
     </a>
     <nav class="nav-links">
@@ -78,7 +69,7 @@
 <section class="hero">
   <div class="wrap">
     <span class="eyebrow"><span class="dot"></span>Windows 10 / 11 · x64 · 免安装</span>
-    <h1>离线也能好好玩的<br><span class="grad">Minecraft 启动器</span></h1>
+    <h1>离线也能<span class="hao">好</span>好玩的<br><span class="grad">Minecraft 启动器</span></h1>
     <p class="lead">
       不依赖任何在线服务，不收集任何数据。存档备份、世界合并、性能归因、Mod 管理
       —— 那些平时要凑四五个工具才干得完的事，这里一步做完。
@@ -230,6 +221,7 @@
   </div>
 </footer>
 
+<script src="/motion.js" defer></script>
 <script>
 document.addEventListener('click', function (e) {
   var b = e.target.closest('.copy');

@@ -13,6 +13,7 @@
   "lint": {
     "rules": {
       "tags": ["recommended"]
-    }
+    },
+    "exclude": ["public/"]
   }
 }

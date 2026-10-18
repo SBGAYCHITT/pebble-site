@@ -42,6 +42,17 @@ section[id] { scroll-margin-top: 80px; }
 
 ::selection { background: rgba(0, 179, 164, .18); }
 
+/* ---------------- 背景：粒子海洋 ----------------
+ * 画布固定在视口上，只负责动；内容整层抬到它上面。
+ * 只给纯色块的段落留了半透明，让海在页面里断续可见 —— 不是全铺，
+ * 一路铺满会跟正文抢注意力。
+ */
+#sea {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+main, footer { position: relative; z-index: 1; }
+
 /* ---------------- 顶栏 ---------------- */
 .nav {
   position: sticky; top: 0; z-index: 20;
@@ -52,7 +63,12 @@ section[id] { scroll-margin-top: 80px; }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; letter-spacing: .5px; }
 .brand:hover { text-decoration: none; }
-.brand .mark { width: 26px; height: 26px; image-rendering: pixelated; }
+/* 原版 logo（透明底 PNG）。悬停时轻轻歪一下，别做成花活 */
+.brand .mark {
+  width: 34px; height: 34px; border-radius: 8px; display: block;
+  transition: transform .18s cubic-bezier(.2, .7, .3, 1.2);
+}
+.brand:hover .mark { transform: rotate(-5deg) scale(1.06); }
 .brand em { font-style: normal; color: var(--accent); }
 .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
 .nav-links a { color: var(--dim); }
@@ -68,8 +84,8 @@ section[id] { scroll-margin-top: 80px; }
 .hero::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background-image:
-    linear-gradient(to right, rgba(0, 179, 164, .07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(10, 127, 240, .07) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 179, 164, .03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(10, 127, 240, .03) 1px, transparent 1px);
   background-size: 26px 26px;
   -webkit-mask-image: radial-gradient(ellipse 70% 62% at 50% 0%, #000 0%, transparent 72%);
   mask-image: radial-gradient(ellipse 70% 62% at 50% 0%, #000 0%, transparent 72%);
@@ -80,7 +96,7 @@ section[id] { scroll-margin-top: 80px; }
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 12.5px; letter-spacing: .8px; color: var(--dim);
   border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; background: #fff;
-  margin-bottom: 22px;
+  margin-bottom: 30px;
 }
 .eyebrow .dot { width: 7px; height: 7px; background: var(--accent); border-radius: 2px; }
 
@@ -93,6 +109,41 @@ h1 {
 h1 .grad {
   background: var(--grad);
   -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* 标题里的「好」：横向增殖。
+ * 中文字宽是满格的，同一行左右没有空隙 —— 残影要是留在基线上，就会糊住后面那个「好」。
+ * 所以让它一边往右飘、一边往上抬，从字形上方的空白里浮出去，谁也不挡。
+ */
+.hao { position: relative; display: inline-block; }
+.hao.bloom { animation: haoPulse .58s cubic-bezier(.22, .7, .3, 1); }
+.hao-echo {
+  position: absolute; left: 0; top: 0;
+  /* 基点定在上边：缩放时底边不会往下长，才不会压到字形头上 */
+  transform-origin: 50% 0;
+  color: var(--accent2); pointer-events: none;
+  animation: haoEcho .95s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+@keyframes haoPulse {
+  0% { transform: scaleX(1); }
+  34% { transform: scaleX(1.14); }
+  100% { transform: scaleX(1); }
+}
+/* 三个复制体依次冒出来、横向排开：一个 → 两个 → 三个。
+ * 位置卡在字顶之上（底边 -0.02em），所以不会盖住任何字形，
+ * 也不需要跟行宽抢地方 —— --i 由脚本写成 1/2/3，间距固定 0.42em。
+ */
+@keyframes haoEcho {
+  0% { opacity: 0; transform: translate(0, -.06em) scale(.34); }
+  30% { opacity: .72; }
+  72% {
+    opacity: .62;
+    transform: translate(calc(var(--i) * .56em), -.55em) scale(.58);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--i) * .56em), -.62em) scale(.54);
+  }
 }
 .lead {
   max-width: 660px; margin: 20px auto 0;
@@ -120,7 +171,8 @@ h1 .grad {
 .meta code { font-size: 12.5px; }
 
 /* ---------------- 数据条 ---------------- */
-.stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--soft); }
+/* 半透明而不是纯色：底下的粒子还看得见一点，页面是一整块而不是拼的 */
+.stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(245, 248, 252, .88); }
 .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; }
 .stat { padding: 22px 16px; text-align: center; }
 .stat .n {
@@ -131,7 +183,7 @@ h1 .grad {
 
 /* ---------------- 通用段落 ---------------- */
 .section { padding: 76px 0; }
-.section.alt { background: var(--soft); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.section.alt { background: rgba(245, 248, 252, .88); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .section-head { max-width: 660px; margin-bottom: 38px; }
 .section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
 .section-head h2 { font-size: clamp(23px, 3vw, 31px); letter-spacing: -.015em; line-height: 1.3; }
@@ -296,4 +348,14 @@ footer { border-top: 1px solid var(--line); padding: 34px 0 46px; }
   .section { padding: 54px 0; }
   .dl-main { padding: 26px 22px; }
   .brand span { font-size: 14px; }
+  .brand .mark { width: 30px; height: 30px; }
+}
+
+/* 系统开了「减少动态效果」就老实待着：海只画一帧静景，好字不增殖 */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hao-echo { display: none; }
+  .hao.bloom { animation: none; }
+  .brand:hover .mark { transform: none; }
+  .feat, .btn { transition: none; }
 }
