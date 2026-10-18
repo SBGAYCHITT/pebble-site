@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文档 — Pebble Lunchar</title>
+<meta name="description" content="Pebble Lunchar 的安装、更新源配置、数据目录与常见问题。">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <svg class="mark" viewBox="0 0 12 12" aria-hidden="true">
+        <defs>
+          <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#14c8b4"/><stop offset="1" stop-color="#0a7ff0"/>
+          </linearGradient>
+        </defs>
+        <g fill="url(#mg)">
+          <rect x="4" y="2" width="4" height="1"/><rect x="3" y="3" width="6" height="1"/>
+          <rect x="2" y="4" width="8" height="4"/><rect x="3" y="8" width="6" height="1"/>
+          <rect x="4" y="9" width="4" height="1"/>
+        </g>
+        <rect x="4" y="4" width="2" height="2" fill="#fff" opacity=".55"/>
+      </svg>
+      <span>Pebble <em>Lunchar</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="/#features">功能</a>
+      <a href="/changelog">更新日志</a>
+      <a href="/docs">文档</a>
+      <a class="ghost" href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <h1>文档</h1>
+      <p>从下载到第一次启动，再到自动更新与排查。</p>
+    </div>
+  </section>
+
+  <div class="wrap doc">
+    <aside class="toc">
+      <b>目录</b>
+      <a href="#start">快速开始</a>
+      <a href="#update">配置自动更新</a>
+      <a href="#data">数据放在哪</a>
+      <a href="#req">系统要求</a>
+      <a href="#faq">常见问题</a>
+      <a href="#api">接口与清单</a>
+    </aside>
+
+    <div class="doc-body">
+
+      <section id="start">
+        <h2>快速开始</h2>
+        <ol>
+          <li>下载 <code>Pebble-Lunchar-{{VER}}.exe</code>（{{SIZE}}），放到一个你找得到的地方，双击运行。</li>
+          <li>Windows 可能会弹「已保护你的电脑」—— 点<b>更多信息 → 仍要运行</b>。这是未购买代码签名的程序都会遇到的提示，不是检测到病毒。</li>
+          <li>填一个玩家名。离线模式下这个名称会按 Minecraft 的规则算出 UUID，和服务器离线模式一致。</li>
+          <li>在「版本」页下载一个正式版或快照，然后回首页点「启动」。</li>
+        </ol>
+        <p>第一次启动会自动下载游戏资源，视网络情况需要几分钟。之后就可以断网玩了。</p>
+      </section>
+
+      <section id="update">
+        <h2>配置自动更新</h2>
+        <p>启动器不会偷偷联网检查更新 —— 更新源是空的，得你填一次：</p>
+        <ol>
+          <li>打开「设置 → 系统与更新」。</li>
+          <li>在「更新源」里粘贴：<br><code>{{ORIGIN}}/api/update/latest</code></li>
+          <li>点「检查更新」。有新版时会出现「下载并安装」。</li>
+        </ol>
+        <p>
+          下载是流式的，能看到速度和进度，随时可以取消。下完先做 SHA-256 和大小校验，
+          对不上就丢弃；校验通过后才会提示「立即重启安装」—— 它会等你退出启动器，再替换 exe 并重新拉起。
+        </p>
+        <div class="note" style="margin-top:14px">
+          <b>关键一点：</b>清单里没有 <code>sha256</code> 时，启动器<b>不会</b>自动安装，只会显示「打开下载页」。
+          宁可不做这一步，也不装一个校验不了的文件。这一条是故意的，不是 bug。
+        </div>
+      </section>
+
+      <section id="data">
+        <h2>数据放在哪</h2>
+        <p>启动器是单文件 portable，但配置与缓存仍然需要一个固定位置，否则每次运行都像新装的：</p>
+        <ul>
+          <li><b>游戏目录</b>（<code>.minecraft</code>）：默认在用户目录下，可在设置里改成任意路径。</li>
+          <li><b>配置、时光机块库、实例、自带 Java</b>：在 <code>%APPDATA%</code> 下与应用同名的文件夹里。</li>
+          <li><b>下载好的更新包</b>：同一个位置下的 <code>updates</code> 目录，重启后还能接着装。</li>
+        </ul>
+        <p>在资源管理器地址栏输入 <code>%APPDATA%</code> 就能打开这个位置。删掉启动器 exe 不会带走存档。</p>
+      </section>
+
+      <section id="req">
+        <h2>系统要求</h2>
+        <ul>
+          <li>Windows 10 / 11，64 位。</li>
+          <li>不需要预装 Java —— 启动器可以自己下载对应版本的 JDK；也可以用你已经装好的。</li>
+          <li>需要网络下载游戏与资源，之后可以离线。</li>
+        </ul>
+      </section>
+
+      <section id="faq">
+        <h2>常见问题</h2>
+
+        <h3>杀毒软件报毒 / 无法运行</h3>
+        <p>
+          未签名的 Electron 打包程序被误报很常见。可以先核对 SHA-256 与首页的值是否一致；
+          一致说明文件没被动过，再加进白名单。这个项目没有购买代码签名证书，
+          所以「未知发布者」这个提示会一直在。
+        </p>
+
+        <h3>自动更新替换不了 exe</h3>
+        <p>
+          便携版运行时会把自己解压到临时目录，替换的必须是<b>你双击的那个文件</b>。
+          启动器为此用的是 <code>PORTABLE_EXECUTABLE_FILE</code> 而不是当前进程路径。
+          如果仍然失败，通常是文件被占用或位于需要管理员权限的目录（例如 <code>C:\Program Files</code>），
+          换到普通目录或手动下载即可。
+        </p>
+
+        <h3>更新检查一直失败</h3>
+        <p>
+          先在浏览器打开更新源地址，应该看到一段 JSON。如果打不开，问题在地址或网络；
+          如果能看到 JSON 但启动器仍报错，多半是「更新源里填的不是 <code>/api/update/latest</code> 这个完整地址」。
+        </p>
+
+        <h3>两个启动器同时开着会打架吗</h3>
+        <p>
+          不会。多账户并行是分开的进程，实例之间也互相隔离；但同一个实例同时被两个进程写存档会有风险，
+          所以启动前会做占用检查。
+        </p>
+      </section>
+
+      <section id="api">
+        <h2>接口与清单</h2>
+        <p>本站同时是启动器的更新源，两个接口都不需要登录：</p>
+        <table>
+          <thead><tr><th>地址</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>GET /api/update/latest</code></td><td>版本清单（JSON）</td></tr>
+            <tr><td><code>GET /api/update/file/&lt;name&gt;.exe</code></td><td>本站托管时直接下载；否则 302 到 GitHub</td></tr>
+            <tr><td><code>GET /api/update/health</code></td><td>自检：清单、校验值、大小是否对得上</td></tr>
+          </tbody>
+        </table>
+
+        <p>清单字段：</p>
+        <pre><code>{
+  "version": "{{VER}}",
+  "notes": "更新说明",
+  "url": "安装包直链（http/https）",
+  "sha256": "64 位十六进制，缺了就不自动安装",
+  "size": {{SIZE_BYTES}},
+  "publishedAt": "{{DATE}}"
+}</code></pre>
+        <p>
+          版本号按数值逐段比较，所以 <code>1.10</code> 大于 <code>1.9</code>。
+          <code>size</code> 用于进度百分比，也用于「下完是否完整」的硬判据。
+        </p>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>© {{YEAR}} Pebble Lunchar · MIT License</div>
+    <div class="foot-links">
+      <a href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="/">首页</a>
+      <a href="/changelog">更新日志</a>
+      <a href="/api/update/latest">更新源</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

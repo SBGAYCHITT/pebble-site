@@ -1,0 +1,18 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-read --allow-env main.ts",
+    "check": "deno check main.ts lib.ts",
+    "test": "deno test --allow-read --allow-env lib_test.ts"
+  },
+  "fmt": {
+    "lineWidth": 110,
+    "semiColons": true,
+    "singleQuote": true,
+    "exclude": ["DEPLOY.md", "public/"]
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  }
+}

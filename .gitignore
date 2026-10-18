@@ -1,0 +1,10 @@
+# 这个文件只影响 git，不影响 `deno deploy`：
+# 部署是把当前目录整个上传（只自动排除 .git 和 node_modules），
+# 所以 public/updates/ 里的 exe 仍然会上传 —— 这正是自托管想要的效果。
+public/updates/*.exe
+
+# Deno 缓存
+.deno/
+
+# 本地草稿
+*.log

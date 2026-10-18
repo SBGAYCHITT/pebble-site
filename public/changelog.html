@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>更新日志 — Pebble Lunchar</title>
+<meta name="description" content="Pebble Lunchar 的版本历史与每次改了什么。">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <svg class="mark" viewBox="0 0 12 12" aria-hidden="true">
+        <defs>
+          <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#14c8b4"/><stop offset="1" stop-color="#0a7ff0"/>
+          </linearGradient>
+        </defs>
+        <g fill="url(#mg)">
+          <rect x="4" y="2" width="4" height="1"/><rect x="3" y="3" width="6" height="1"/>
+          <rect x="2" y="4" width="8" height="4"/><rect x="3" y="8" width="6" height="1"/>
+          <rect x="4" y="9" width="4" height="1"/>
+        </g>
+        <rect x="4" y="4" width="2" height="2" fill="#fff" opacity=".55"/>
+      </svg>
+      <span>Pebble <em>Lunchar</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="/#features">功能</a>
+      <a href="/changelog">更新日志</a>
+      <a href="/docs">文档</a>
+      <a class="ghost" href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <h1>更新日志</h1>
+      <p>共 {{RELEASES_COUNT}} 个版本。当前最新是 v{{VER}}（{{DATE}}）。</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="rel-list-wrap">
+      {{RELEASES}}
+    </div>
+  </div>
+
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="note">
+        <b>不想手动下载？</b>启动器里把「设置 → 系统与更新 → 更新源」填成
+        <code>{{ORIGIN}}/api/update/latest</code>，之后它会自己检查、自己下载、校验通过才替换。
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>© {{YEAR}} Pebble Lunchar · MIT License</div>
+    <div class="foot-links">
+      <a href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="/">首页</a>
+      <a href="/docs">文档</a>
+      <a href="/api/update/latest">更新源</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
