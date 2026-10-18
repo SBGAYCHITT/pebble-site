@@ -131,14 +131,18 @@ git push -u origin main
 
 打开 https://app.deno.com → **New App** → **Deploy from GitHub** →
 授权 GitHub（第一次会弹窗）→ 选 `SBGAYCHITT/pebble-site`、分支 `main` →
-应用名填 `pebble-lunchar` → Entrypoint 填 **`main.ts`** → Deploy。
+应用名填 `pebble-site` → Entrypoint 填 **`main.ts`** → Deploy。
 
 > 站点代码是**零外部依赖**（只 import 自己的 `lib.ts`），所以构建阶段不会再碰
 > jsr.io / npm，几秒就完。
 
-**4) 拿域名**
+**4) 域名（已确认）**
 
-形如 `https://pebble-lunchar.<你的组织>.deno.net`。
+```
+https://pebble-site.shitsmart.deno.net
+```
+
+组织 `shitsmart`，应用名 `pebble-site`。**这一串就是线上地址**，下面的表格和命令都按它写好了。
 
 ### B. 命令行部署（本机能访问 jsr.io 时才用）
 
@@ -151,7 +155,7 @@ deno deploy --prod
 
 1. **登录** —— 会打开浏览器。用 GitHub 账号授权即可（Deno Deploy 免费版够用）。
 2. **选组织** —— 只有一个的话会自动选中；有多个就选你自己的那个。
-3. **起名字** —— 建议 `pebble-lunchar`。这个名字会出现在域名里。
+3. **起名字** —— 本项目叫 `pebble-site`。这个名字会出现在域名里。
 
 > ⚠️ 一定要带 `--prod`。不带的话部署出来的是一个**预览地址**，
 > 每次部署都换 URL，启动器里的更新源第二天就失效了。
@@ -160,14 +164,14 @@ deno deploy --prod
 
 | 用在哪 | 填什么 |
 |---|---|
-| 启动器「设置 → 系统与更新 → 更新源」 | `https://pebble-lunchar.<组织>.deno.net/api/update/latest` |
+| 启动器「设置 → 系统与更新 → 更新源」 | `https://pebble-site.shitsmart.deno.net/api/update/latest` |
 | 启动器 `pebblecloud.js` 的默认后端（可选） | 只在你想把云存档也搬到这个站时才改，**默认不要动** |
 | 首页下载按钮 | 自动跟着 `data/latest.json` 走，不用手改 |
 
 部署完立刻自检：
 
 ```
-https://pebble-lunchar.<组织>.deno.net/api/update/health?probe=1
+https://pebble-site.shitsmart.deno.net/api/update/health?probe=1
 ```
 
 `ok: true` 才算上线成功。
@@ -251,13 +255,13 @@ git push
 
 ```bat
 cd /d D:\apps\2026-09-12-10-14-18\pebble-site
-deno deploy --prod --org <你的组织> --app pebble-lunchar
+deno deploy --prod --org shitsmart --app pebble-site
 ```
 
 ### 6. 自检
 
 ```
-https://pebble-lunchar.<组织>.deno.net/api/update/health?probe=1
+https://pebble-site.shitsmart.deno.net/api/update/health?probe=1
 ```
 
 看到 `ok: true` 和 `probe.sizeMatches: true` 就完事了。
