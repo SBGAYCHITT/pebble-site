@@ -1,0 +1,58 @@
+name: CI
+
+# 只在 main 和 PR 上跑：PR 里提前发现「格式/类型/测试挂了」「构建产物不自洽」，
+# 而不是等 Cloudflare 构建失败了再看日志。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: 格式检查
+        run: deno fmt --check
+
+      - name: Lint
+        run: deno lint
+
+      - name: 类型检查
+        run: deno check main.ts lib.ts
+
+      - name: 单元测试
+        run: deno task test
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 先构建一次：清单缺字段、占位符没替换、引用到了不存在的文件，都会在这里中止
+      - name: 构建静态站
+        run: node build.mjs
+
+      # 同样的输入必须产出同样的字节。指纹文件名一旦不稳定，
+      # 每次部署都会让所有人重新下载一遍全部资源，immutable 缓存就白做了。
+      - name: 构建可复现
+        run: |
+          find dist -type f | sort | xargs sha256sum > /tmp/build-1.txt
+          node build.mjs > /dev/null
+          find dist -type f | sort | xargs sha256sum > /tmp/build-2.txt
+          if ! diff -u /tmp/build-1.txt /tmp/build-2.txt; then
+            echo "::error::两次构建产物不一致，说明有非确定性内容（时间戳/随机数/排序不稳）"
+            exit 1
+          fi
+          echo "两次构建产物完全一致（$(wc -l < /tmp/build-1.txt) 个文件）"
