@@ -267,31 +267,54 @@ fs.writeFileSync(
 );
 
 /**
- * 缓存策略分三档：
- *   /*           no-cache            —— HTML 和一切没指纹的东西，每次回源确认
- *   /assets/*    一年 immutable       —— 名字里带内容哈希，改了就换名字，永久缓存是安全的
- *   /data/*      60 秒                —— 更新清单要快，但没必要每次穿透
- * 顺序有意义：Cloudflare 会合并命中的规则，后写的覆盖前面同名字段。
+ * 缓存策略分三档，**用精确路径而不是 `/*` 兜底**。
+ *
+ * 踩过的坑：Cloudflare 对同一响应命中的多条 `_headers` 规则是「逗号拼接」而不是覆盖。
+ * 曾经写成 `/*` 给 no-cache、`/assets/*` 给 immutable，结果 CSS 头变成
+ * `no-cache, public, max-age=31536000, immutable` —— no-cache 依然生效，immutable 白设。
+ * 所以这里只让 `/*` 管安全头（没人跟它抢），Cache-Control 全部按路径精确下发。
+ *
+ *   HTML           no-cache              每次回源确认，改版立刻可见
+ *   /assets/*      一年 immutable        名字里带内容哈希，换名字才换内容
+ *   /data/*、/api/* 60 秒                更新清单要快，但没必要每次穿透
  */
-fs.writeFileSync(
-  path.join(DIST, '_headers'),
-  [
-    '/*',
-    '  X-Content-Type-Options: nosniff',
-    '  Referrer-Policy: no-referrer',
-    '  Cache-Control: no-cache',
-    `  Link: <${styleHref}>; rel=preload; as=style`,
-    '',
-    '/assets/*',
-    '  Cache-Control: public, max-age=31536000, immutable',
-    '',
-    '/data/*',
-    '  Content-Type: application/json; charset=utf-8',
-    '  Cache-Control: public, max-age=60',
-    '',
-    '',
-  ].join('\n'),
+const headerLines = ['/*', '  X-Content-Type-Options: nosniff', '  Referrer-Policy: no-referrer', ''];
+
+// HTML 的规则按实际产物生成：新增页面不会漏掉缓存头。
+// 无扩展路径（/docs）在 Pages 上是 rewrite 到 docs.html，匹配的是请求 URL，所以要一起写。
+const htmlNames = fs.readdirSync(DIST).filter((f) => f.endsWith('.html')).sort();
+for (const f of htmlNames) {
+  const routes = ['/' + f];
+  if (f === 'index.html') routes.push('/');
+  else if (f !== '404.html') routes.push('/' + f.replace(/\.html$/, ''));
+  for (const r of routes) {
+    headerLines.push(r, '  Cache-Control: no-cache', `  Link: <${styleHref}>; rel=preload; as=style`, '');
+  }
+}
+
+headerLines.push(
+  '/assets/*',
+  '  Cache-Control: public, max-age=31536000, immutable',
+  '',
+  '/data/*',
+  '  Content-Type: application/json; charset=utf-8',
+  '  Cache-Control: public, max-age=60',
+  '',
+  // /api/update/latest 是 _redirects 重写到 /data/*.json，匹配按请求路径算，得单独写
+  '/api/*',
+  '  Content-Type: application/json; charset=utf-8',
+  '  Cache-Control: public, max-age=60',
+  '',
+  '/robots.txt',
+  '  Cache-Control: public, max-age=3600',
+  '',
+  '/sitemap.xml',
+  '  Cache-Control: public, max-age=3600',
+  '',
+  '',
 );
+
+fs.writeFileSync(path.join(DIST, '_headers'), headerLines.join('\n'));
 
 fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 
