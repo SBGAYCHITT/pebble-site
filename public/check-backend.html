@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>后端自检 — Pebble Launcher</title>
+<meta name="description" content="一键检查 Pebble Launcher 云端后端是否正常。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .chk-form { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 12px; }
+  .chk-form input { flex: 1 1 320px; font: inherit; padding: 11px 14px; border: 1px solid #d8dee8;
+    border-radius: 10px; background: #fff; color: #1b2029; }
+  .chk-form input:focus { outline: 2px solid #14c8b4; outline-offset: 1px; border-color: #14c8b4; }
+  .chk-out { margin-top: 18px; border: 1px solid #e3e8f0; border-radius: 12px; background: #fbfcfe;
+    padding: 14px 16px; font: 13px/1.75 ui-monospace, Consolas, "Cascadia Mono", monospace;
+    white-space: pre-wrap; word-break: break-word; min-height: 64px; color: #1b2029; }
+  .chk-hint { font-size: 14px; color: #6b7484; margin: 10px 0 0; }
+  .ok { color: #0f9d76; font-weight: 700; }
+  .bad { color: #d0342c; font-weight: 700; }
+  .warn { color: #b26a00; font-weight: 700; }
+  .chk-sum { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <img class="mark" src="/logo.png" alt="" width="34" height="34" decoding="async">
+      <span>Pebble <em>Launcher</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="/#features">功能</a>
+      <a href="/changelog">更新日志</a>
+      <a href="/docs">文档</a>
+      <a class="ghost" href="{{REPO}}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <h1>后端自检</h1>
+      <p class="sub">检查云端后端（注册、登录、云存档）是否正常。这一页会<strong>直接从你的浏览器</strong>向目标地址发请求，
+        填哪个地址就查哪个。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="chk-form">
+        <input id="base" spellcheck="false" autocomplete="off" placeholder="https://cf-pebble-backend.pages.dev">
+        <button id="run-ro" class="btn primary" type="button">只读检查</button>
+        <button id="run-full" class="btn" type="button">完整测试</button>
+      </div>
+      <p class="chk-hint">
+        <b>只读检查</b>不写任何数据，只看服务是否活着、KV 有没有绑上、跨域通不通 —— 平时用这个就够了。<br>
+        <b>完整测试</b>会真的注册一个临时账号并写一条云存档，验完自动删掉账号以外的数据；账号名带时间戳，留下的记录可以忽略。
+      </p>
+      <pre id="out" class="chk-out">填好地址，点上面的按钮。</pre>
+    </div>
+  </section>
+</main>
+
+<script src="/check-backend.js" defer></script>
+</body>
+</html>
