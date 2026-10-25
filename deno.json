@@ -8,12 +8,12 @@
     "lineWidth": 110,
     "semiColons": true,
     "singleQuote": true,
-    "exclude": ["DEPLOY.md", "public/"]
+    "exclude": ["DEPLOY.md", "public/", "src/"]
   },
   "lint": {
     "rules": {
       "tags": ["recommended"]
     },
-    "exclude": ["public/"]
+    "exclude": ["public/", "src/"]
   }
 }

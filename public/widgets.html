@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widget 契约 — Pebble Launcher</title>
+<meta name="description" content="Pebble Launcher 官网的轻量组件机制：怎么注册一个 widget、能拿到什么上下文、为什么不支持远程加载。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!--@include:header-->
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <h1>Widget 契约</h1>
+      <p>一个 40 行就能写完的组件内核。同源、已注册、不远程加载脚本。</p>
+    </div>
+  </section>
+
+  <!-- 复用文档页的排版：.doc-body 负责 h2 下划线、代码块底色、列表缩进。
+       这里不需要左侧目录，所以不套 .doc 的两列网格，只用它的内边距数值。 -->
+  <div class="wrap doc-body" style="padding:34px 0 88px;max-width:900px">
+    <section>
+      <h2 id="live">先看活的</h2>
+      <p>下面三个都是走同一套契约挂上去的，源码在 <code>public/widgets.js</code>。</p>
+
+      <div class="wg-grid">
+        <div class="wg" data-widget="clock"></div>
+        <div class="wg" data-widget="version"></div>
+        <div class="wg" data-widget="palette"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 id="contract">契约只有四个东西</h2>
+
+      <h3>1. 注册</h3>
+      <pre><code>PebbleWidgets.define('hello', {
+  title: '打招呼',
+  mount: function (root, ctx) {
+    root.textContent = '你好，' + (ctx.config.who || '陌生人');
+    return function () { /* 清理定时器之类的，可省略 */ };
+  }
+});</code></pre>
+
+      <h3>2. 挂载</h3>
+      <p>页面上留一个带 <code>data-widget</code> 的容器就行。配置写在 <code>data-config</code> 上，是 JSON。</p>
+      <pre><code>&lt;div data-widget="hello" data-config='{"who":"小明"}'&gt;&lt;/div&gt;</code></pre>
+      <p>动态插入的节点调一次 <code>PebbleWidgets.scan(容器)</code> 就会补挂上，已经挂过的不会重复。</p>
+
+      <h3>3. 上下文</h3>
+      <ul>
+        <li><code>ctx.config</code> — 上面那段 JSON 解析出来的对象，解析失败就是 <code>{}</code></li>
+        <li><code>ctx.root</code> — 你的容器元素</li>
+        <li><code>ctx.on(evt, fn)</code> — 订阅事件，返回取消订阅的函数</li>
+        <li><code>ctx.emit(evt, payload)</code> — 发事件</li>
+        <li><code>ctx.setTheme(name)</code> — 换强调色（<code>teal</code> / <code>violet</code> / <code>amber</code>）</li>
+      </ul>
+
+      <h3>4. 清理</h3>
+      <p><code>mount</code> 返回一个函数，卸载时会被调用。有 <code>setInterval</code>、<code>fetch</code> 回写的组件必须返回它，否则切页面之后定时器还在跑。</p>
+    </section>
+
+    <section>
+      <h2 id="why">为什么不做远程加载</h2>
+      <p>
+        很多「插件化」方案会让运行时去拉一个 URL 执行。这个站在做的是分发 exe，
+        一旦允许任意脚本，任何一次供应链问题都会直接变成「下载页被人换了链接」。
+        所以这里的规矩是：<b>组件必须跟着仓库一起发版</b>，走 PR。
+      </p>
+      <p>代价是社区不能自己上线组件，换来的是这里每一行 JS 都能在 git 历史里查到。</p>
+    </section>
+
+    <section>
+      <h2 id="events">内置事件</h2>
+      <ul>
+        <li><code>mounted</code> — <code>{ type, el }</code>，某个组件挂上了</li>
+        <li><code>theme</code> — 主题名，切色之后触发</li>
+        <li><code>version</code> — 更新清单的原始对象（来自 <code>/api/update/latest</code>）</li>
+      </ul>
+      <p>事件是进程内的，不跨标签页。要跨标签页用 <code>BroadcastChannel</code>，自己开。</p>
+    </section>
+
+    <section>
+      <h2 id="offline">顺便：这个页面离线也能看</h2>
+      <p>
+        站点装了 Service Worker，<code>/widgets</code> 在预缓存清单里。
+        断网之后刷新，导航会回落缓存，静态资源走 <code>cache-first</code>。
+      </p>
+    </section>
+  </div>
+</main>
+
+<!--@include:footer-->
+
+<script src="/widgets.js" defer></script>
+</body>
+</html>

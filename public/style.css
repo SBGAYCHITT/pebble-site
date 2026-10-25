@@ -232,7 +232,8 @@ h1 .grad {
 }
 .copy {
   margin-left: 6px; font-size: 11.5px; color: var(--dim); background: #fff;
-  border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  min-height: 30px; /* 手机上这是唯一能点中的地方，别做成 16px 高的细条 */
 }
 .copy:hover { color: var(--ink); border-color: #cbd5e1; }
 
@@ -319,6 +320,28 @@ footer { border-top: 1px solid var(--line); padding: 34px 0 46px; }
 .foot a { color: var(--dim); }
 .foot code { font-size: 12.5px; }
 
+/* ---------------- Widget（REC-08） ---------------- */
+/* auto-fit + minmax：不写死列数，220px 放不下就自动折行。
+   比「900px 两列 / 620px 一列」少两个断点，也不怕以后加第四个组件。 */
+.wg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 18px 0 8px; }
+.wg {
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px;
+  background: #fff; box-shadow: var(--shadow); min-height: 112px;
+}
+.wg-big {
+  font-size: 27px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.wg-sub { font-size: 12.5px; color: var(--faint); margin-top: 7px; }
+.wg-miss { color: #d0342c; font-size: 13px; }
+.wg-swatches { display: flex; gap: 10px; }
+.wg-sw {
+  width: 38px; height: 38px; border-radius: 11px; border: 1px solid var(--line);
+  background: var(--sw); cursor: pointer; transition: transform .14s ease;
+}
+.wg-sw:hover { transform: translateY(-2px); }
+.wg-sw:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
 /* ---------------- 响应式 ---------------- */
 @media (max-width: 900px) {
   .features, .deep { grid-template-columns: 1fr 1fr; }
@@ -331,8 +354,10 @@ footer { border-top: 1px solid var(--line); padding: 34px 0 46px; }
   .verify p { grid-column: 1; }
 }
 @media (max-width: 620px) {
-  .nav-links { gap: 12px; font-size: 13px; }
-  .nav-links a.ghost { display: none; }
+  /* 只藏「功能」这一个 —— 首页往下滚就是功能区块，导航里再放一遍是重复的。
+     GitHub 不能藏：它是这个站最少不了的出口。 */
+  .nav-links { gap: 11px; font-size: 13px; }
+  .nav-links .hide-sm { display: none; }
   .hero { padding: 56px 0 40px; }
   .features, .deep { grid-template-columns: 1fr; }
   .stats .wrap { grid-template-columns: 1fr 1fr; }
@@ -342,6 +367,27 @@ footer { border-top: 1px solid var(--line); padding: 34px 0 46px; }
   .dl-main { padding: 26px 22px; }
   .brand span { font-size: 14px; }
   .brand .mark { width: 30px; height: 30px; }
+  /* 文档里的表格会比屏幕宽，给它自己一条横向滚动条，别把整页撑出横滑 */
+  .doc-body table { display: block; overflow-x: auto; }
+  .doc-body pre { font-size: 12.2px; }
+}
+
+/* 极窄屏（320~420）：两列数据条已经挤不出空间了，改单列；
+   按钮撑满，免得「下载」和「看看改了什么」一半在屏幕外 */
+@media (max-width: 420px) {
+  .wrap { padding: 0 16px; }
+  .nav-links { gap: 9px; font-size: 12.5px; }
+  .nav-links a.ghost { padding: 5px 8px; }
+  .cta .btn, .dl-main .btn.big { width: 100%; justify-content: center; }
+  .stats .wrap { grid-template-columns: 1fr; }
+  .stat { padding: 18px 14px; }
+  .stat:nth-child(odd) { border-right: none; }
+  .stat + .stat { border-top: 1px solid var(--line); }
+  .dl-facts { padding: 22px 20px; }
+  .dl-facts > div, .dl-facts > div.full { grid-template-columns: 1fr; gap: 3px; }
+  .rel { padding-left: 22px; }
+  .foot { font-size: 12px; }
+  .foot-links { gap: 12px; }
 }
 
 /* 系统开了「减少动态效果」就老实待着：海只画一帧静景，字直接落位不再滑出 */

@@ -10,6 +10,13 @@
 //   REC-02 预加载：HTML 注入 <link rel=preload as=style>，_headers 另发 Link 头供 103 使用
 //   REC-03 构建确定性：CSS/HTML 安全压缩 + 产物自检，配合 .github/workflows/ci.yml
 //
+// v6 第三组（REC-06/07/08）：
+//   REC-06 PWA：构建期生成 manifest.webmanifest 与带版本号的 sw.js，
+//          预缓存清单跟着指纹一起变，改版就自动换 cache 名
+//   REC-07 组件解耦：Header/Footer 抽成 src/partials/*.html，页面里只留
+//          <!--@include:header-->；改导航只改一处
+//   REC-08 Widget：/widgets 演示页 + Widget 契约（运行时在 public/widgets.js）
+//
 // 零依赖，只用 node 内置模块。
 
 import crypto from 'node:crypto';
@@ -19,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(ROOT, 'public');
+const SRC_EXTRA = path.join(ROOT, 'src');
 const DIST = path.join(ROOT, 'dist');
 
 const REPO_URL = 'https://github.com/SBGAYCHITT/PeBble_lunchar';
@@ -196,6 +204,36 @@ const vars = {
   YEAR: esc(String(new Date().getFullYear())),
 };
 
+/* ---------------- 组件包含（REC-07） ---------------- */
+
+/**
+ * `<!--@include:header-->` → src/partials/header.html
+ *
+ * 为什么要在构建期拼：四个页面的顶栏原来各写一份，改个链接得改四处，
+ * 漏一处就出现「首页导航是新的、文档页还是旧的」。抽成 partial 后只有一个真相。
+ * 不做运行时 JS 注入 —— 那会让导航晚一拍出现，还会被无 JS 的抓取器当成空页面。
+ */
+const PARTIALS = new Map();
+const partialDir = path.join(SRC_EXTRA, 'partials');
+if (fs.existsSync(partialDir)) {
+  for (const f of fs.readdirSync(partialDir)) {
+    if (f.endsWith('.html')) {
+      PARTIALS.set(path.basename(f, '.html'), fs.readFileSync(path.join(partialDir, f), 'utf8'));
+    }
+  }
+}
+
+function includePartials(html) {
+  return html.replace(/<!--\s*@include:([a-z0-9_-]+)\s*-->/gi, (whole, name) => {
+    const part = PARTIALS.get(name);
+    if (!part) {
+      problems.push(`页面引用了不存在的 partial：${name}`);
+      return whole;
+    }
+    return part;
+  });
+}
+
 /** 把 HTML 里 `/style.css` 这类引用换成 `/assets/style.<hash>.css` */
 function rewriteRefs(html) {
   return html.replace(/\b(href|src)="\/([^"?#>]+)([?#][^"]*)?"/g, (whole, attr, rel, suffix) => {
@@ -219,10 +257,43 @@ function injectPreload(html) {
   return html.slice(0, i) + tag + '\n  ' + html.slice(i);
 }
 
+/**
+ * 注入 PWA 相关的三个标签（REC-06）。
+ *
+ * 只注入一次：如果页面自己已经写了 manifest，就不再插。
+ * SW 的注册要等 load，避免和首屏资源抢带宽；注册失败静默，
+ * 因为「不能安装到桌面」不该影响正常浏览。
+ */
+function injectPwa(html) {
+  let out = html;
+
+  if (!/rel="manifest"/i.test(out)) {
+    // 注意：这里跑在 rewriteRefs 之后，所以图标路径要自己查 assetMap，
+    // 不能直接写 /icons/xxx.png —— 那些文件已经被指纹化搬到 /assets/ 下了。
+    const appleIcon = assetMap.get('icons/apple-touch-icon.png') || '/favicon.svg';
+    const tags = [
+      '<link rel="manifest" href="/manifest.webmanifest">',
+      `<link rel="apple-touch-icon" href="${appleIcon}">`,
+      '<meta name="apple-mobile-web-app-title" content="Pebble">',
+    ].join('\n  ');
+    out = out.replace(/<\/head>/i, `  ${tags}\n</head>`);
+  }
+
+  if (!out.includes('serviceWorker')) {
+    const script = '<script>if("serviceWorker" in navigator){addEventListener("load",function(){' +
+      'navigator.serviceWorker.register("/sw.js").catch(function(){})})}</script>';
+    out = out.replace(/<\/body>/i, `${script}\n</body>`);
+  }
+
+  return out;
+}
+
 for (const e of fs.readdirSync(SRC, { withFileTypes: true })) {
   if (!e.isFile() || !e.name.endsWith('.html')) continue;
   const raw = fs.readFileSync(path.join(SRC, e.name), 'utf8');
-  const body = stripHtmlComments(injectPreload(rewriteRefs(render(raw, vars))));
+  const body = stripHtmlComments(
+    injectPreload(injectPwa(rewriteRefs(render(includePartials(raw), vars)))),
+  );
   fs.writeFileSync(path.join(DIST, e.name), body);
 }
 
@@ -243,6 +314,78 @@ function copyRest(dir, base = '') {
   }
 }
 copyRest(SRC);
+
+/* ---------------- PWA：manifest 与 Service Worker（REC-06） ---------------- */
+
+/**
+ * 图标为什么要指纹化：换 logo 时图标也得跟着换名字，
+ * 否则浏览器/系统桌面会一直拿着旧的那张（manifest 里的 URL 没变）。
+ */
+const iconAny192 = assetMap.get('icons/icon-192.png');
+const iconAny512 = assetMap.get('icons/icon-512.png');
+const iconMask = assetMap.get('icons/icon-maskable-512.png');
+if (!iconAny192 || !iconAny512 || !iconMask) {
+  problems.push(
+    'PWA 图标缺失：public/icons/ 下需要 icon-192.png、icon-512.png、icon-maskable-512.png（跑 tools/make-icons.py 生成）',
+  );
+}
+
+const manifest = {
+  name: 'Pebble Launcher',
+  short_name: 'Pebble',
+  description:
+    'Windows 上的 Minecraft 启动器：一个文件、双击就能玩。存档能找回、世界能合并、卡了能查原因、Mod 一键装。',
+  lang: 'zh-CN',
+  dir: 'ltr',
+  start_url: '/',
+  scope: '/',
+  display: 'standalone',
+  orientation: 'any',
+  background_color: '#ffffff',
+  theme_color: '#ffffff',
+  categories: ['games', 'utilities'],
+  icons: [
+    { src: iconAny192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: iconAny512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: iconMask, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+  ],
+  shortcuts: [
+    { name: '更新日志', short_name: '更新', url: '/changelog' },
+    { name: '怎么用', short_name: '文档', url: '/docs' },
+  ],
+};
+fs.writeFileSync(path.join(DIST, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2) + '\n');
+
+/**
+ * 预缓存清单只放「首屏必需 + 离线时还想看」的东西。
+ *
+ * 有意不收进来的：icon-512（159 KB，只有安装时才用）、check-backend.*（排障工具，
+ * 用的时候一定有网）、/data/*.json（更新信息必须联网拿最新的，缓存了反而误导）。
+ * 这些走运行时的 cache-first / network-first，用到了自然就进缓存。
+ */
+const precache = [
+  '/',
+  '/docs',
+  '/changelog',
+  '/widgets',
+  assetMap.get('style.css'),
+  assetMap.get('motion.js'),
+  assetMap.get('logo.png'),
+  assetMap.get('favicon.svg'),
+  assetMap.get('widgets.js'),
+  '/manifest.webmanifest',
+].filter(Boolean);
+
+// 版本号 = 预缓存清单的指纹。任何一个资源改了名字（内容变了），cache 名就变，
+// activate 时把旧的整套删掉 —— 不需要手动维护 CACHE_VERSION 常量。
+const swVersion = crypto.createHash('sha256').update(precache.join('\n')).digest('hex').slice(0, 12);
+const swSource = fs.readFileSync(path.join(SRC_EXTRA, 'sw.js'), 'utf8');
+fs.writeFileSync(
+  path.join(DIST, 'sw.js'),
+  // 必须 replaceAll：文件顶部注释里也提到这两个占位符，
+  // 用 replace 只会换到注释那一处，真正的常量原样留着 —— 踩过。
+  swSource.replaceAll('__VERSION__', swVersion).replaceAll('__PRECACHE__', JSON.stringify(precache, null, 2)),
+);
 
 // 清单也要在站上有一份：客户端的更新源可以直指 /data/latest.json
 fs.mkdirSync(path.join(DIST, 'data'), { recursive: true });
@@ -296,6 +439,16 @@ headerLines.push(
   '/assets/*',
   '  Cache-Control: public, max-age=31536000, immutable',
   '',
+  // SW 自己必须能更新：一旦发 immutable，浏览器会拿着旧脚本永远不换。
+  // Service-Worker-Allowed 允许它接管更外层路径（这里就是根）。
+  '/sw.js',
+  '  Cache-Control: no-cache',
+  '  Service-Worker-Allowed: /',
+  '',
+  '/manifest.webmanifest',
+  '  Content-Type: application/manifest+json; charset=utf-8',
+  '  Cache-Control: no-cache',
+  '',
   '/data/*',
   '  Content-Type: application/json; charset=utf-8',
   '  Cache-Control: public, max-age=60',
@@ -348,6 +501,9 @@ p{color:#6b7484}a{color:#0a7ff0}</style>
 
 const errors = [];
 
+// 渲染阶段才发现的清单问题（partial 名字写错、PWA 图标没生成）在这里一起报。
+if (problems.length) errors.push(...problems);
+
 function scanHtml(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
@@ -362,6 +518,15 @@ function scanHtml(dir) {
     // 1) 模板占位符没填完
     const left = body.match(/\{\{[A-Z0-9_]+\}\}/g);
     if (left) errors.push(`${where}: 占位符没替换 —— ${[...new Set(left)].join(' ')}`);
+
+    // 1b) partial 没展开（名字写错、或忘了先 walk）
+    if (body.includes('@include:')) errors.push(`${where}: 还有没展开的 <!--@include:...-->`);
+
+    // 1c) PWA 标签漏注入（404 是最后生成的极简页，不参与）
+    if (where !== '404.html') {
+      if (!body.includes('rel="manifest"')) errors.push(`${where}: 缺 <link rel="manifest">`);
+      if (!body.includes('serviceWorker')) errors.push(`${where}: 缺 Service Worker 注册`);
+    }
 
     // 2) 引用的本地文件不存在（漏拷 / 改名后忘记同步）
     for (const m of body.matchAll(/\b(?:href|src)="(\/[^"?#]+)"/g)) {
@@ -383,6 +548,26 @@ for (const [, href] of assetMap) {
   if (!fs.existsSync(path.join(DIST, href.replace(/^\//, '')))) errors.push(`缺少产物 ${href}`);
 }
 
+// 4) PWA 产物自洽：sw.js 占位符换干净了、manifest 里的图标真的存在
+for (const f of ['manifest.webmanifest', 'sw.js']) {
+  if (!fs.existsSync(path.join(DIST, f))) errors.push(`缺少产物 ${f}`);
+}
+const swOut = fs.existsSync(path.join(DIST, 'sw.js'))
+  ? fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8')
+  : '';
+if (swOut.includes('__VERSION__') || swOut.includes('__PRECACHE__')) {
+  errors.push('sw.js 里的 __VERSION__ / __PRECACHE__ 没替换');
+}
+if (fs.existsSync(path.join(DIST, 'manifest.webmanifest'))) {
+  const mf = JSON.parse(fs.readFileSync(path.join(DIST, 'manifest.webmanifest'), 'utf8'));
+  for (const ic of mf.icons || []) {
+    if (!ic.src || !fs.existsSync(path.join(DIST, ic.src.replace(/^\//, '')))) {
+      errors.push(`manifest 里的图标不存在：${ic.src}`);
+    }
+  }
+  if (!mf.icons || mf.icons.length < 3) errors.push('manifest 图标少于 3 个（缺 maskable）');
+}
+
 if (errors.length) {
   console.error('\n构建失败，产物不自洽：');
   for (const e of errors) console.error('  - ' + e);
@@ -396,3 +581,5 @@ console.log(`  v${feed.version} · ${humanSize(feed.size)} · ${releases.length}
 console.log(`  指纹资源 ${assetMap.size} 个 → /assets/（一年 immutable）`);
 console.log(`  HTML no-cache；更新清单 60 秒`);
 console.log(`  预加载 ${styleHref}`);
+console.log(`  PWA：manifest + sw.js（cache pebble-${swVersion}，预缓存 ${precache.length} 项）`);
+console.log(`  partials：${[...PARTIALS.keys()].join(', ') || '（无）'}`);
